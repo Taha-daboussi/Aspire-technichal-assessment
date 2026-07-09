@@ -49,7 +49,7 @@ Routing is a deterministic category-to-queue map (always computed as `suggestedQ
 Escalation is deterministic code (not the LLM), so the rules are auditable, unit-testable, and cheap. Five rules, each appends a human-readable reason; any one firing sets `escalated: true` and overrides the queue:
 
 0. **Unparseable LLM output**: both chains run with `onError: continueRegularOutput`, so a model error or a Structured Output Parser failure reaches the Code node as an item with no `output` key. Rather than crash or emit a record with silent nulls, the item is flagged and sent to human review (`fallbackUsed: true`). A record we cannot trust is one a human should see; dropping it is the worse failure.
-1. **Confidence < 0.70** triggers the low-confidence fallback (`fallbackUsed: true`). An unsure classification gets human eyes. Suppressed when rule 0 already fired, so a failed classification does not report a fabricated confidence of 0.
+1. **Confidence < 0.70** triggers the low-confidence fallback (`fallbackUsed: true`). An unsure classification gets human eyes. Suppressed when classification failed, so a failed classification does not report a fabricated confidence of 0.
 2. **Literal keyword**: message contains `outage` or `down for all users` (case-insensitive). Kept intentionally minimal: a deterministic backstop for the exact compliance phrases in the brief. Semantic outage detection is the classifier's job (rule 4), not a keyword list.
 3. **Billing discrepancy > $500**: `|charged - contract|`, computed in the Code node from the two amounts the LLM extracted. The LLM never does arithmetic.
 4. **Category = Incident/Outage**: always escalate.

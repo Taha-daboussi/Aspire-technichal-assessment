@@ -14,7 +14,7 @@ For each inbound message the workflow:
 5. **Persists** a full JSON record to Google Sheets + POSTs it to a downstream endpoint + returns it to the caller.
 6. **Escalates** — confidence < 0.70, literal outage keywords, a billing discrepancy > $500, or an Incident/Outage category flags the record and routes it to a separate escalation queue.
 
-Routing and escalation are **deterministic code** (a single n8n Code node, unit-tested 23/23), not the LLM — so the business rules are auditable and cheap. The two LLM steps are kept separate for single-purpose prompts and isolated failure.
+Routing and escalation are **deterministic code** (a single n8n Code node, unit-tested 38/38), not the LLM — so the business rules are auditable and cheap. The two LLM steps are kept separate for single-purpose prompts and isolated failure.
 
 ## Quickstart
 
@@ -46,7 +46,7 @@ Full manual setup (owner account, Anthropic key, Google Sheet with the 17-column
 | `prompts/classify.md`, `prompts/enrich.md` | Master copies of the two LLM prompts |
 | `data/samples.json` | 6 inputs (5 official + 1 synthetic ambiguous demo) |
 | `scripts/send-samples.sh` | Feeder — POSTs each sample to the webhook |
-| `scripts/test-route-node.mjs` | Dev-time unit test (23 assertions) for the routing/escalation Code node — extracts its real code from the workflow JSON. Run: `node scripts/test-route-node.mjs` |
+| `scripts/test-route-node.mjs` | Dev-time unit test (38 assertions) for the routing/escalation Code node — extracts its real code from the workflow JSON. Run: `node scripts/test-route-node.mjs` |
 | `output/records.json` | **The 5 official output records** (deliverable 4.2) |
 | `output/records-demo-msg-006.json` | The low-confidence fallback demo record |
 | `docs/ARCHITECTURE.md` | System design write-up (deliverable 4.4) |
