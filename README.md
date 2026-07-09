@@ -2,7 +2,7 @@
 
 An agentic **intake & triage pipeline** that turns unstructured customer messages (email / web form / support portal) into structured, classified, routed, and escalation-aware records. Built for the Valsoft AI Engineer take-home using free/open-source tools.
 
-**Stack:** [n8n](https://n8n.io) (orchestration) · **Groq `llama-3.3-70b-versatile`** (classification + enrichment, temperature 0) · Google Sheets (structured output + escalation queue) · [webhook.cool](http://webhook.cool/) (downstream system simulation).
+**Stack:** [n8n](https://n8n.io) (orchestration) · **Anthropic `claude-sonnet-5`** (classification + enrichment) · Google Sheets (structured output + escalation queue) · [webhook.cool](http://webhook.cool/) (downstream system simulation).
 
 ## What it does
 
@@ -27,7 +27,7 @@ docker run -d --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n docker.n8n.io/
 #    n8n → Workflows → Import from File → workflow/arcvault-intake-triage.json
 
 # 3. Add credentials in the n8n UI (you supply the keys — see docs/RUNBOOK.md):
-#    - Groq API   → select it on both "Groq Model - *" nodes
+#    - Anthropic API → select it on both "Anthropic Model - *" nodes
 #    - Google Sheets OAuth2 → select it on both "Append to *" nodes; pick the Records / Escalation Queue tabs
 #    The Sheet ID + webhook.cool URL are pre-filled with the demo values; to use your own,
 #    edit the two "Append to *" (Google Sheets) nodes + the "POST to webhook.cool" node.
@@ -36,7 +36,7 @@ docker run -d --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n docker.n8n.io/
 bash scripts/send-samples.sh
 ```
 
-Full manual setup (owner account, Groq key, Google Sheet with the 17-column header, webhook.cool) is in **[docs/RUNBOOK.md](docs/RUNBOOK.md)**.
+Full manual setup (owner account, Anthropic key, Google Sheet with the 17-column header, webhook.cool) is in **[docs/RUNBOOK.md](docs/RUNBOOK.md)**.
 
 ## Repo map
 
@@ -57,4 +57,4 @@ Full manual setup (owner account, Groq key, Google Sheet with the 17-column head
 
 ## Model choice
 
-**Groq `llama-3.3-70b-versatile`** — free tier, very low latency, strong instruction-following and strict-JSON adherence via n8n's structured-output parser. Temperature 0 for near-determinism (the five official samples classified identically across three runs). A local Ollama model is a documented fallback if no key is available. Full reasoning in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+**Anthropic `claude-sonnet-5`** — strong instruction-following and reliable strict JSON via n8n's structured-output parser, which both LLM chains depend on. The pipeline originally ran on Groq's free-tier `llama-3.3-70b-versatile`, but the free tier's token-per-minute/day limits couldn't sustain two LLM calls per message across repeated test runs, so the chat-model node was swapped to Sonnet 5 — same prompts, same parsers, only the model node changed. Sonnet 5 rejects non-default sampling parameters (`temperature`, `top_p`, `top_k` each return a 400), so temperature can't be pinned to 0; determinism comes from the prompt and the output schema instead. A local Ollama model remains the documented fallback if API access is unavailable. Full reasoning in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
