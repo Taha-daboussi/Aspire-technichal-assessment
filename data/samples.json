@@ -1,0 +1,39 @@
+[
+  {
+    "id": "msg-001",
+    "source": "email",
+    "receivedAt": "2026-07-08T13:02:00Z",
+    "rawMessage": "Hi, I tried logging in this morning and keep getting a 403 error. My account is arcvault.io/user/jsmith. This started after your update last Tuesday."
+  },
+  {
+    "id": "msg-002",
+    "source": "web_form",
+    "receivedAt": "2026-07-08T13:14:00Z",
+    "rawMessage": "We'd love to see a bulk export feature for our audit logs. We're a compliance-heavy org and this would save us hours every month."
+  },
+  {
+    "id": "msg-003",
+    "source": "support_portal",
+    "receivedAt": "2026-07-08T13:27:00Z",
+    "rawMessage": "Invoice #8821 shows a charge of $1,240 but our contract rate is $980/month. Can someone look into this?"
+  },
+  {
+    "id": "msg-004",
+    "source": "email",
+    "receivedAt": "2026-07-08T13:41:00Z",
+    "rawMessage": "I'm not sure if this is the right place to ask, but is there a way to set up SSO with Okta? We're evaluating switching our auth provider."
+  },
+  {
+    "id": "msg-005",
+    "source": "web_form",
+    "receivedAt": "2026-07-08T13:55:00Z",
+    "rawMessage": "Your dashboard stopped loading for us around 2pm EST. Checked our end — it's definitely on yours. Multiple users affected."
+  },
+  {
+    "id": "msg-006",
+    "source": "support_portal",
+    "receivedAt": "2026-07-08T14:08:00Z",
+    "demoExtra": true,
+    "rawMessage": "Hi — honestly not sure who to send this to. Ever since something changed on our account recently, a few things feel off: a report I used to pull isn't where I expect it, and I have a feeling our latest charge looked different too. Might all be unrelated, might be nothing. Can someone point me in the right direction?"
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "id": "msg-006",
+  "source": "support_portal",
+  "rawMessage": "Hi — honestly not sure who to send this to. Ever since something changed on our account recently, a few things feel off: a report I used to pull isn't where I expect it, and I have a feeling our latest charge looked different too. Might all be unrelated, might be nothing. Can someone point me in the right direction?",
+  "receivedAt": "2026-07-08T14:08:00Z",
+  "run": 1,
+  "demoExtra": true,
+  "category": "Billing Issue",
+  "priority": "Medium",
+  "confidence": 0.45,
+  "reasoning": "The message vaguely mentions two possible issues: a missing/moved report (could be a Bug Report) and a charge that 'looked different' (could be a Billing Issue). The user explicitly hedges ('might all be unrelated, might be nothing') and asks for direction rather than describing a clear malfunction or a concrete billing discrepancy. Since there is no specific error described and no confirmed billing discrepancy amount, this is a mixed-signal, vague message spanning two plausible categories without enough detail to confidently pick one. Given the billing mention is a concrete money-related concern (even if vague) and slightly more specific than the report issue, I lean toward Billing Issue, but confidence must be capped low due to ambiguity. Priority: since it's a single user, non-blocking, and money-related concern is mentioned, Medium fits best per rubric (billing discrepancy = Medium), though the vagueness argues against high urgency.",
+  "coreIssue": "Customer suspects something changed on their account recently, affecting a report they used to access and possibly their latest charge, but is unsure and wants direction.",
+  "identifiers": [],
+  "urgencySignal": "low",
+  "billingAmounts": {
+    "charged": null,
+    "contract": null
+  },
+  "billingAmountDelta": null,
+  "suggestedQueue": "Billing",
+  "queue": "Escalation / Human Review",
+  "escalated": true,
+  "fallbackUsed": true,
+  "escalationReasons": [
+    "Low confidence (0.45 < 0.70): routed to human review as fallback"
+  ],
+  "summary": "Customer reports a vague sense that something changed on their account recently, noting a report they used to pull is missing and their latest charge may look different, though they are unsure and provided no specifics. No identifiers, amounts, or dates were given. Suggested first action: reply asking for the account details, the report name, and a copy or screenshot of the recent invoice/charge to investigate further.",
+  "processedAt": "2026-07-09T15:50:23.525Z"
+}

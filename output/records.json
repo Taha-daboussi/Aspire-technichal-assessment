@@ -1,0 +1,184 @@
+[
+  {
+    "id": "msg-001",
+    "source": "email",
+    "rawMessage": "Hi, I tried logging in this morning and keep getting a 403 error. My account is arcvault.io/user/jsmith. This started after your update last Tuesday.",
+    "receivedAt": "2026-07-08T13:02:00Z",
+    "run": 1,
+    "demoExtra": false,
+    "category": "Bug Report",
+    "priority": "High",
+    "confidence": 0.83,
+    "reasoning": "The user reports a single account (jsmith) unable to log in, receiving a 403 error, starting after a specific update. This is one user affected, not a broad service outage, and the service itself appears otherwise up. Per disambiguation rules, a single user unable to log in is a Bug Report, not an Incident/Outage, since there's no indication multiple users are affected. Since it's a lockout/authentication failure, priority is High per the rubric regardless of single-user scope.",
+    "coreIssue": "Customer is receiving a 403 error when trying to log in, starting after last Tuesday's update.",
+    "identifiers": [
+      {
+        "type": "error_code",
+        "value": "403"
+      },
+      {
+        "type": "url",
+        "value": "arcvault.io/user/jsmith"
+      },
+      {
+        "type": "timestamp",
+        "value": "last Tuesday"
+      }
+    ],
+    "urgencySignal": "medium",
+    "billingAmounts": {
+      "charged": null,
+      "contract": null
+    },
+    "billingAmountDelta": null,
+    "suggestedQueue": "Engineering",
+    "queue": "Engineering",
+    "escalated": false,
+    "fallbackUsed": false,
+    "escalationReasons": [],
+    "summary": "Customer cannot log in and is receiving a 403 error at arcvault.io/user/jsmith, which began after last Tuesday's update. This suggests a login/access bug tied to the recent update. Recommend first checking recent update logs and account access permissions for this user.",
+    "processedAt": "2026-07-09T15:49:24.438Z"
+  },
+  {
+    "id": "msg-002",
+    "source": "web_form",
+    "rawMessage": "We'd love to see a bulk export feature for our audit logs. We're a compliance-heavy org and this would save us hours every month.",
+    "receivedAt": "2026-07-08T13:14:00Z",
+    "run": 1,
+    "demoExtra": false,
+    "category": "Feature Request",
+    "priority": "Low",
+    "confidence": 0.95,
+    "reasoning": "The user is explicitly asking for a new capability — bulk export of audit logs — that does not currently exist. This is a request to build new functionality, not a how-to question about existing features, so it clearly fits Feature Request. Nothing is broken and no user is blocked, so priority is Low per the rubric. The request is clear and unambiguous, so confidence is high.",
+    "coreIssue": "Customer is requesting a bulk export feature for audit logs to support their compliance needs.",
+    "identifiers": [
+      {
+        "type": "product_area",
+        "value": "audit logs"
+      }
+    ],
+    "urgencySignal": "low",
+    "billingAmounts": {
+      "charged": null,
+      "contract": null
+    },
+    "billingAmountDelta": null,
+    "suggestedQueue": "Product",
+    "queue": "Product",
+    "escalated": false,
+    "fallbackUsed": false,
+    "escalationReasons": [],
+    "summary": "Customer, a compliance-heavy organization, has requested a bulk export feature for audit logs, noting it would save significant time each month. This is a feature request with no reported urgency or service impact. Suggested first action: log the request with the product team as a feature enhancement for audit log export functionality.",
+    "processedAt": "2026-07-09T15:49:39.687Z"
+  },
+  {
+    "id": "msg-003",
+    "source": "support_portal",
+    "rawMessage": "Invoice #8821 shows a charge of $1,240 but our contract rate is $980/month. Can someone look into this?",
+    "receivedAt": "2026-07-08T13:27:00Z",
+    "run": 1,
+    "demoExtra": false,
+    "category": "Billing Issue",
+    "priority": "Medium",
+    "confidence": 0.97,
+    "reasoning": "The message concerns a discrepancy between an invoice charge ($1,240) and the contracted rate ($980/month). This is explicitly a billing/invoice discrepancy, which per the rules is a Billing Issue regardless of being framed as a discrepancy. It is a single-user money discrepancy, not a service outage or malfunction, so priority is Medium per the rubric. The message is clear and detailed, with an invoice number, exact amounts, and a specific ask, so confidence is high.",
+    "coreIssue": "Customer disputes a charge on Invoice #8821 that is higher than their contracted monthly rate.",
+    "identifiers": [
+      {
+        "type": "invoice_number",
+        "value": "8821"
+      },
+      {
+        "type": "amount",
+        "value": "$1,240"
+      },
+      {
+        "type": "amount",
+        "value": "$980"
+      }
+    ],
+    "urgencySignal": "medium",
+    "billingAmounts": {
+      "charged": 1240,
+      "contract": 980
+    },
+    "billingAmountDelta": 260,
+    "suggestedQueue": "Billing",
+    "queue": "Billing",
+    "escalated": false,
+    "fallbackUsed": false,
+    "escalationReasons": [],
+    "summary": "Customer reports Invoice #8821 charged $1,240, but their contract rate is $980/month. They are asking for someone to investigate the discrepancy. Suggested first action: have billing review Invoice #8821 against the account's contract terms and respond with a correction or explanation.",
+    "processedAt": "2026-07-09T15:49:49.232Z"
+  },
+  {
+    "id": "msg-004",
+    "source": "email",
+    "rawMessage": "I'm not sure if this is the right place to ask, but is there a way to set up SSO with Okta? We're evaluating switching our auth provider.",
+    "receivedAt": "2026-07-08T13:41:00Z",
+    "run": 1,
+    "demoExtra": false,
+    "category": "Technical Question",
+    "priority": "Low",
+    "confidence": 0.93,
+    "reasoning": "The user is asking how to set up SSO with Okta as they evaluate switching auth providers. This is a how-to/configuration question about existing functionality (SSO integration), not a request to build something new, and nothing is broken or down. This matches the explicit example in the disambiguation rules for Technical Question. Nothing is blocked currently, so priority is Low.",
+    "coreIssue": "Customer is asking whether SSO with Okta can be set up as they evaluate switching auth providers.",
+    "identifiers": [
+      {
+        "type": "product_area",
+        "value": "SSO"
+      }
+    ],
+    "urgencySignal": "low",
+    "billingAmounts": {
+      "charged": null,
+      "contract": null
+    },
+    "billingAmountDelta": null,
+    "suggestedQueue": "IT/Security",
+    "queue": "IT/Security",
+    "escalated": false,
+    "fallbackUsed": false,
+    "escalationReasons": [],
+    "summary": "Customer emailed asking if ArcVault supports SSO integration with Okta, as they are evaluating a switch in their authentication provider. This is a routine pre-sales/technical question with no urgency indicated. Suggested first action: route to the technical or solutions team to confirm Okta SSO support and share setup documentation.",
+    "processedAt": "2026-07-09T15:49:57.711Z"
+  },
+  {
+    "id": "msg-005",
+    "source": "web_form",
+    "rawMessage": "Your dashboard stopped loading for us around 2pm EST. Checked our end — it's definitely on yours. Multiple users affected.",
+    "receivedAt": "2026-07-08T13:55:00Z",
+    "run": 1,
+    "demoExtra": false,
+    "category": "Incident/Outage",
+    "priority": "High",
+    "confidence": 0.92,
+    "reasoning": "The message reports that the dashboard stopped loading entirely and explicitly states multiple users are affected, with the issue confirmed to be on the vendor's side. This matches the Incident/Outage definition (service unreachable/broadly degraded, multiple users affected) rather than a single-user Bug Report. Priority is High per rubric since service is down and multiple users are blocked. The message is clear and detailed enough to be confident in this classification.",
+    "coreIssue": "The customer's dashboard stopped loading, and they believe the issue is on ArcVault's side, affecting multiple users.",
+    "identifiers": [
+      {
+        "type": "timestamp",
+        "value": "2pm EST"
+      },
+      {
+        "type": "product_area",
+        "value": "dashboard"
+      }
+    ],
+    "urgencySignal": "high",
+    "billingAmounts": {
+      "charged": null,
+      "contract": null
+    },
+    "billingAmountDelta": null,
+    "suggestedQueue": "Engineering",
+    "queue": "Escalation / Human Review",
+    "escalated": true,
+    "fallbackUsed": false,
+    "escalationReasons": [
+      "Category is Incident/Outage: always escalated for immediate response"
+    ],
+    "summary": "Customer reports the dashboard stopped loading around 2pm EST, and multiple users on their end are affected. They've ruled out an issue on their side and believe it's a service outage. Recommend immediate investigation into dashboard availability and status confirmation to the customer.",
+    "processedAt": "2026-07-09T15:50:08.969Z"
+  }
+]

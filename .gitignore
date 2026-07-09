@@ -1,0 +1,8 @@
+.remember/
+.claude/
+.agents/
+node_modules/
+.env
+.env.*
+*.docx
+.~lock.*

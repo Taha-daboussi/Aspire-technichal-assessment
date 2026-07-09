@@ -1,0 +1,808 @@
+{
+  "name": "ArcVault Intake & Triage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        300
+      ],
+      "id": "11111111-1111-1111-1111-111111111101",
+      "name": "Webhook - Intake",
+      "webhookId": "arcvault-intake"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f-id",
+              "name": "id",
+              "value": "={{ $json.body.id || ('msg-' + $now.toMillis()) }}",
+              "type": "string"
+            },
+            {
+              "id": "f-source",
+              "name": "source",
+              "value": "={{ $json.body.source || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-raw",
+              "name": "rawMessage",
+              "value": "={{ $json.body.rawMessage }}",
+              "type": "string"
+            },
+            {
+              "id": "f-received",
+              "name": "receivedAt",
+              "value": "={{ $json.body.receivedAt || $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "f-run",
+              "name": "run",
+              "value": "={{ $json.body.run || 1 }}",
+              "type": "number"
+            },
+            {
+              "id": "f-demo",
+              "name": "demoExtra",
+              "value": "={{ $json.body.demoExtra || false }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -180,
+        300
+      ],
+      "id": "11111111-1111-1111-1111-111111111102",
+      "name": "Normalize Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a senior customer-support triage analyst at ArcVault, a B2B SaaS company. Classify ONE inbound customer message into exactly one category, assign a priority, and report your genuine confidence.\n\nCATEGORIES (choose exactly one):\n- Bug Report — a specific feature or function is malfunctioning for the user (error message, wrong or unexpected behavior) while the service as a whole is up.\n- Feature Request — the user asks for a new capability or enhancement that does not exist yet.\n- Billing Issue — anything about invoices, charges, payments, pricing, or contract amounts, including both discrepancies and questions.\n- Technical Question — a how-to, configuration, integration, or evaluation question about existing functionality; nothing is broken.\n- Incident/Outage — a service is currently unavailable, unreachable, or broadly degraded, especially when multiple users are affected.\n\nDISAMBIGUATION RULES:\n- Incident/Outage vs Bug Report: Outage = the service itself is down or unreachable, or multiple users are affected (e.g. the app is unreachable or broadly failing). Bug Report = one specific function misbehaves while the service as a whole is up. A single user who cannot log in is a Bug Report (priority High per the rubric), not an outage.\n- Technical Question vs Feature Request: A Technical Question asks HOW to use, configure, or integrate something that already exists (e.g. asking how to configure SSO with an identity provider while evaluating options → Technical Question). A Feature Request asks us to BUILD something new that is not available yet (e.g. requesting a new scheduled bulk-export capability).\n- Billing Issue: any money, invoice, charge, or pricing topic — a charge that disagrees with the contract rate is a Billing Issue, not a Bug Report.\n\nPRIORITY RUBRIC (apply strictly):\n- High — service is down, multiple users are blocked, a security concern, or the user is locked out of access (cannot log in / authentication failure).\n- Medium — a single user is degraded on a core function, OR a money/billing discrepancy.\n- Low — a general question, a feature request, or nothing is currently blocked.\n\nCONFIDENCE (0.0 to 1.0): your genuine certainty in the category. Reserve confidence above 0.85 for a message with a single clear category backed by explicit detail. If two or more categories each plausibly apply AND the message lacks the detail to decide between them, you MUST set confidence to 0.6 or lower. Do NOT inflate — a vague, hedging, or mixed-signal message should score below 0.70.\n\nReason first, then commit to the fields. Keep `reasoning` to at most 3 sentences. Base every field ONLY on the message content below.\n\nMessage source: {{ $json.source }}\nMessage: {{ $json.rawMessage }}",
+        "hasOutputParser": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        140,
+        300
+      ],
+      "id": "11111111-1111-1111-1111-111111111103",
+      "name": "Classify (LLM)",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "claude-sonnet-5"
+        },
+        "options": {
+          "maxTokensToSample": 2048
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        140,
+        520
+      ],
+      "id": "11111111-1111-1111-1111-111111111104",
+      "name": "Anthropic Model - Classify"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"reasoning\": { \"type\": \"string\", \"description\": \"Step-by-step justification for the chosen category and priority, written before deciding. At most 3 sentences.\" },\n    \"category\": { \"type\": \"string\", \"enum\": [\"Bug Report\", \"Feature Request\", \"Billing Issue\", \"Technical Question\", \"Incident/Outage\"] },\n    \"priority\": { \"type\": \"string\", \"enum\": [\"Low\", \"Medium\", \"High\"] },\n    \"confidence\": { \"type\": \"number\", \"minimum\": 0, \"maximum\": 1 }\n  },\n  \"required\": [\"reasoning\", \"category\", \"priority\", \"confidence\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        260,
+        520
+      ],
+      "id": "11111111-1111-1111-1111-111111111105",
+      "name": "Structured Output Parser - Classify"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a support-triage analyst at ArcVault, a B2B SaaS company. A prior step has already classified this message. Now extract structured details and write a short team-facing summary. Use ONLY facts stated in the message — never invent identifiers, numbers, or details that are not literally present.\n\nExtract:\n- coreIssue: the central problem or request, in ONE sentence.\n- identifiers: every concrete identifier literally present in the message. For each, give a type (one of: account_id, invoice_number, error_code, url, timestamp, amount, product_area) and its value exactly as written. If there are none, return an empty array.\n- urgencySignal: low, medium, or high — how time-sensitive the message sounds, based on its wording and impact (service down or many users affected or a hard deadline = high; a routine question = low).\n- billingAmounts: EXTRACTION ONLY. charged = the amount the customer says they were charged (a number, no currency symbol), or null if not stated. contract = the amount they say their contract or agreed rate is (a number), or null if not stated. Do NOT compute any difference — extraction only; a later deterministic step does the arithmetic.\n- summary: 2 to 3 sentences for the receiving team — the issue, the key facts, and a suggested first action — written so a queue owner can act without re-reading the original message.\n\nClassified category: {{ $json.output?.category || \"Unknown (classification step failed)\" }}\nMessage source: {{ $('Normalize Input').item.json.source }}\nMessage: {{ $('Normalize Input').item.json.rawMessage }}",
+        "hasOutputParser": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        500,
+        300
+      ],
+      "id": "11111111-1111-1111-1111-111111111106",
+      "name": "Enrich (LLM)",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "claude-sonnet-5"
+        },
+        "options": {
+          "maxTokensToSample": 2048
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.5,
+      "position": [
+        500,
+        520
+      ],
+      "id": "11111111-1111-1111-1111-111111111107",
+      "name": "Anthropic Model - Enrich"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"coreIssue\": { \"type\": \"string\" },\n    \"identifiers\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"type\": { \"type\": \"string\", \"enum\": [\"account_id\", \"invoice_number\", \"error_code\", \"url\", \"timestamp\", \"amount\", \"product_area\"] },\n          \"value\": { \"type\": \"string\" }\n        },\n        \"required\": [\"type\", \"value\"]\n      }\n    },\n    \"urgencySignal\": { \"type\": \"string\", \"enum\": [\"low\", \"medium\", \"high\"] },\n    \"billingAmounts\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"charged\": { \"type\": [\"number\", \"null\"] },\n        \"contract\": { \"type\": [\"number\", \"null\"] }\n      },\n      \"required\": [\"charged\", \"contract\"]\n    },\n    \"summary\": { \"type\": \"string\" }\n  },\n  \"required\": [\"coreIssue\", \"identifiers\", \"urgencySignal\", \"billingAmounts\", \"summary\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        620,
+        520
+      ],
+      "id": "11111111-1111-1111-1111-111111111108",
+      "name": "Structured Output Parser - Enrich"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const norm = $('Normalize Input').item.json;\n// Both LLM chains run with onError: continueRegularOutput, so a model error or a\n// Structured Output Parser failure arrives here with no `output` key at all.\nconst cls = $('Classify (LLM)').item.json.output || {};\nconst enr = $json.output || {};\nconst raw = String(norm.rawMessage || '').toLowerCase();\n\nconst confRaw = Number(cls.confidence);\nconst confOk = cls.confidence !== null && cls.confidence !== undefined && Number.isFinite(confRaw);\nconst classifyFailed = !cls.category || !confOk;\nconst enrichFailed = !enr.summary;\nconst category = cls.category || null;\nconst confidence = confOk ? confRaw : 0;\n\n// Step 4 — deterministic category -> queue map (suggestedQueue ALWAYS populated)\nconst queueMap = {\n  'Bug Report': 'Engineering',\n  'Incident/Outage': 'Engineering',\n  'Feature Request': 'Product',\n  'Billing Issue': 'Billing',\n  'Technical Question': 'IT/Security',\n};\nconst suggestedQueue = queueMap[category] || 'Escalation / Human Review';\n\n// Billing delta computed HERE, never in the LLM\nconst ba = enr.billingAmounts || {};\nconst charged = typeof ba.charged === 'number' ? ba.charged : null;\nconst contract = typeof ba.contract === 'number' ? ba.contract : null;\nlet billingAmountDelta = null;\nif (charged !== null && contract !== null) { billingAmountDelta = Math.abs(charged - contract); }\n\n// Step 6 — escalation rules, each appends a human-readable reason\nconst escalationReasons = [];\nlet fallbackUsed = false;\n// Rule 0: unparseable LLM output -> human review (a record we cannot trust is a\n// record a human should see; silently dropping the item is the worse failure).\nif (classifyFailed || enrichFailed) {\n  const which = [classifyFailed && 'Classify', enrichFailed && 'Enrich'].filter(Boolean).join(' + ');\n  escalationReasons.push('LLM output missing or unparseable (' + which + '): routed to human review');\n  fallbackUsed = true;\n}\n// Rule 1: low confidence -> low-confidence fallback\nif (!classifyFailed && confidence < 0.70) {\n  escalationReasons.push('Low confidence (' + confidence + ' < 0.70): routed to human review as fallback');\n  fallbackUsed = true;\n}\n// Rule 2: literal escalation keywords (deterministic backstop; semantic detection is the classifier's job)\nif (raw.includes('outage') || raw.includes('down for all users')) {\n  escalationReasons.push(`Escalation keyword matched ('outage' / 'down for all users')`);\n}\n// Rule 3: billing discrepancy over $500 (arithmetic lives here, not in the LLM)\nif (billingAmountDelta !== null && billingAmountDelta > 500) {\n  escalationReasons.push('Billing discrepancy $' + billingAmountDelta + ' exceeds $500 threshold');\n}\n// Rule 4: Incident/Outage category always escalates (this is what escalates msg-005, which lacks literal keywords)\nif (category === 'Incident/Outage') {\n  escalationReasons.push('Category is Incident/Outage: always escalated for immediate response');\n}\n\nconst escalated = escalationReasons.length > 0;\n// queue overridden to escalation when any rule fires; suggestedQueue preserved for the human reviewer\nconst queue = escalated ? 'Escalation / Human Review' : suggestedQueue;\n\nreturn {\n  json: {\n    id: norm.id,\n    source: norm.source,\n    rawMessage: norm.rawMessage,\n    receivedAt: norm.receivedAt,\n    run: norm.run,\n    demoExtra: norm.demoExtra,\n    category,\n    priority: cls.priority || null,\n    confidence,\n    reasoning: cls.reasoning || null,\n    coreIssue: enr.coreIssue || null,\n    identifiers: enr.identifiers || [],\n    urgencySignal: enr.urgencySignal || null,\n    billingAmounts: enr.billingAmounts || { charged: null, contract: null },\n    billingAmountDelta,\n    suggestedQueue,\n    queue,\n    escalated,\n    fallbackUsed,\n    escalationReasons,\n    summary: enr.summary || null,\n    processedAt: new Date().toISOString(),\n  },\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        300
+      ],
+      "id": "11111111-1111-1111-1111-111111111109",
+      "name": "Route & Escalate"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c-eng",
+                    "leftValue": "={{ $json.queue }}",
+                    "rightValue": "Engineering",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Engineering"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c-prod",
+                    "leftValue": "={{ $json.queue }}",
+                    "rightValue": "Product",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Product"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c-bill",
+                    "leftValue": "={{ $json.queue }}",
+                    "rightValue": "Billing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Billing"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c-it",
+                    "leftValue": "={{ $json.queue }}",
+                    "rightValue": "IT/Security",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "IT/Security"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c-esc",
+                    "leftValue": "={{ $json.queue }}",
+                    "rightValue": "Escalation / Human Review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Escalation / Human Review"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Unrouted"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1080,
+        300
+      ],
+      "id": "11111111-1111-1111-1111-11111111110a",
+      "name": "Switch - Route"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s-id",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "s-source",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "s-raw",
+              "name": "rawMessage",
+              "value": "={{ $json.rawMessage }}",
+              "type": "string"
+            },
+            {
+              "id": "s-received",
+              "name": "receivedAt",
+              "value": "={{ $json.receivedAt }}",
+              "type": "string"
+            },
+            {
+              "id": "s-category",
+              "name": "category",
+              "value": "={{ $json.category }}",
+              "type": "string"
+            },
+            {
+              "id": "s-priority",
+              "name": "priority",
+              "value": "={{ $json.priority }}",
+              "type": "string"
+            },
+            {
+              "id": "s-confidence",
+              "name": "confidence",
+              "value": "={{ $json.confidence }}",
+              "type": "number"
+            },
+            {
+              "id": "s-core",
+              "name": "coreIssue",
+              "value": "={{ $json.coreIssue }}",
+              "type": "string"
+            },
+            {
+              "id": "s-identifiers",
+              "name": "identifiers",
+              "value": "={{ JSON.stringify($json.identifiers) }}",
+              "type": "string"
+            },
+            {
+              "id": "s-urgency",
+              "name": "urgencySignal",
+              "value": "={{ $json.urgencySignal }}",
+              "type": "string"
+            },
+            {
+              "id": "s-delta",
+              "name": "billingAmountDelta",
+              "value": "={{ $json.billingAmountDelta }}",
+              "type": "string"
+            },
+            {
+              "id": "s-queue",
+              "name": "queue",
+              "value": "={{ $json.queue }}",
+              "type": "string"
+            },
+            {
+              "id": "s-suggested",
+              "name": "suggestedQueue",
+              "value": "={{ $json.suggestedQueue }}",
+              "type": "string"
+            },
+            {
+              "id": "s-escalated",
+              "name": "escalated",
+              "value": "={{ $json.escalated }}",
+              "type": "boolean"
+            },
+            {
+              "id": "s-reasons",
+              "name": "escalationReasons",
+              "value": "={{ $json.escalationReasons.join('; ') }}",
+              "type": "string"
+            },
+            {
+              "id": "s-summary",
+              "name": "summary",
+              "value": "={{ $json.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "s-processed",
+              "name": "processedAt",
+              "value": "={{ $json.processedAt.slice(0, 16).replace('T', ' ') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1300,
+        300
+      ],
+      "id": "11111111-1111-1111-1111-11111111110b",
+      "name": "Shape Record (Sheet columns)"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18jyLrrnYN_nXQ_N0i1xoGo5ePgd-Jv9YJ09MXXMPKbk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "0",
+          "mode": "list",
+          "cachedResultName": "Records"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1520,
+        300
+      ],
+      "id": "11111111-1111-1111-1111-11111111110c",
+      "name": "Append to Records",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hN8MMcKvdeYHamaI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "if-escalated",
+              "leftValue": "={{ $('Route & Escalate').first().json.escalated }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        300
+      ],
+      "id": "11111111-1111-1111-1111-11111111110d",
+      "name": "IF Escalated"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18jyLrrnYN_nXQ_N0i1xoGo5ePgd-Jv9YJ09MXXMPKbk",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "158589270",
+          "mode": "list",
+          "cachedResultName": "Escalation Queue"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1960,
+        180
+      ],
+      "id": "11111111-1111-1111-1111-11111111110e",
+      "name": "Append to Escalation Queue",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hN8MMcKvdeYHamaI",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://purple-snow-88.webhook.cool",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Route & Escalate').first().json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2180,
+        300
+      ],
+      "id": "11111111-1111-1111-1111-11111111110f",
+      "name": "POST to webhook.cool",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Route & Escalate').first().json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2400,
+        300
+      ],
+      "id": "11111111-1111-1111-1111-111111111110",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook - Intake": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Classify (LLM)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser - Classify": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Classify (LLM)",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify (LLM)": {
+      "main": [
+        [
+          {
+            "node": "Enrich (LLM)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser - Enrich": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Enrich (LLM)",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich (LLM)": {
+      "main": [
+        [
+          {
+            "node": "Route & Escalate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route & Escalate": {
+      "main": [
+        [
+          {
+            "node": "Switch - Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch - Route": {
+      "main": [
+        [
+          {
+            "node": "Shape Record (Sheet columns)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Shape Record (Sheet columns)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Shape Record (Sheet columns)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Shape Record (Sheet columns)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Shape Record (Sheet columns)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Shape Record (Sheet columns)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape Record (Sheet columns)": {
+      "main": [
+        [
+          {
+            "node": "Append to Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Records": {
+      "main": [
+        [
+          {
+            "node": "IF Escalated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Escalated": {
+      "main": [
+        [
+          {
+            "node": "Append to Escalation Queue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "POST to webhook.cool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Escalation Queue": {
+      "main": [
+        [
+          {
+            "node": "POST to webhook.cool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST to webhook.cool": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Model - Classify": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify (LLM)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Model - Enrich": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Enrich (LLM)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "arcvault-assessment"
+  }
+}
